@@ -111,7 +111,7 @@ const createActivitiesTable = async () => {
           id serial PRIMARY KEY,
           trip_id int NOT NULL,
           activity varchar(100) NOT NULL,
-          num_votes integer DEFAULT 0,
+          num_likes integer DEFAULT 0,
           FOREIGN KEY(trip_id) REFERENCES trips(id)
       );
   `;
