@@ -1,39 +1,34 @@
-import { useParams } from "react-router";
-import "./Card.css";
+import { useParams } from 'react-router-dom'
+import '../css/Card.css'
 
-const AddTripOptionCard = (props) => {
-  const { destination_id } = useParams();
+const AddTripOptionCard = (props) =>  {
 
-  // Step 6: Send data from a form to add a destination to a trip in the database
+  const { destination_id } = useParams()
+
   const addToTrip = async (event) => {
-    event.preventDefault();
+    event.preventDefault()
 
     const options = {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        trip_id: props.id,
-        destination_id: destination_id,
-      }),
-    };
-
-    await fetch("/trips-destinations", options);
-    window.location.href = "/";
-  };
+      body: JSON.stringify({trip_id: props.id, destination_id: destination_id})
+    }
+  
+    fetch(`${props.api_url}/api/trips-destinations`, options)
+    window.location.href = '/'
+}
 
   return (
-    <div className="Card" style={{ backgroundImage: `url(${props.img_url})` }}>
-      <div className="card-info">
-        <h2 className="title">{props.title}</h2>
-        <p className="description">{props.description}</p>
-        <button className="addToTrip" onClick={addToTrip}>
-          + Add to Trip
-        </button>
+      <div className='Card' style={{ backgroundImage:`url(${props.img_url})`}}>
+        <div className='card-info'>
+          <h2 className='title'>{props.title}</h2>
+          <p className='description'>{props.description}</p>
+          <button className='addToTrip' onClick={addToTrip}>+ Add to Trip</button>
+        </div>
       </div>
-    </div>
-  );
-};
+  )
+}
 
-export default AddTripOptionCard;
+export default AddTripOptionCard

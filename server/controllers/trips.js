@@ -1,92 +1,95 @@
-// Step 4 Get Data from Tables to Return to Where HTTP Requests are Handled
-import { pool } from "../config/database.js";
+import { pool } from '../config/database.js'
 
 const createTrip = async (req, res) => {
-  try {
-    const { title, description, img_url, num_days, start_date, end_date, total_cost } = req.body
-    const results = await pool.query(
-      'INSERT INTO trips (title, description, img_url, num_days, start_date, end_date, total_cost) \
-      VALUES($1, $2, $3, $4, $5, $6, $7) \
-      RETURNING *',
-      [title, description, img_url, num_days, start_date, end_date, total_cost]
-    )
+    try {
+        const { title, description, img_url, num_days, start_date, end_date, total_cost } = req.body
 
-    res.status(201).json(results.rows[0])
-  }
+        const results = await pool.query(`
+            INSERT INTO trips (title, description, img_url, num_days, start_date, end_date, total_cost)
+            VALUES($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *`,
+            [title, description, img_url, num_days, start_date, end_date, total_cost]
+        )
 
-  catch (error) {
-    res.status(409).json( { error: error.message } )
-  } 
-};
+        const tripUser = await pool.query(`
+            INSERT INTO users_trips (trip_id, username)
+            VALUES($1, $2)
+            RETURNING *`,
+            [results.rows[0].id, username]
+        )
 
-// Step 5: Retrieving All Trips 
+        res.status(201).json(results.rows[0])
+        console.log('🆕 new trip created')
+     }
+
+    catch (error) {
+        response.status(409).json( { error: error.message } )
+        console.log('Error:', error.message)
+    }
+}
+
 const getTrips = async (req, res) => {
-  try {
-    const results = await pool.query('SELECT * FROM trips ORDER BY id ASC')
-    res.status(200).json(results.rows)
-  } catch(error){
-    res.status(409).json( { error: error.message } )
-  }
-};
+    try {
+        const results = await pool.query('SELECT * FROM trips ORDER BY id ASC')
+        res.status(200).json(results.rows)
+    } catch (error) {
+        res.status(409).json( { error: error.message } )
+        console.log('🚫 Unable to GET all trips - Error:', error.message)
+    }
+}
 
-// Step 6: Retrieving a Trip by ID
 const getTrip = async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
+    try {
+        const id = parseInt(req.params.id)
+        const results = await pool.query('SELECT * FROM trips WHERE id = $1', [id])
+        res.status(200).json(results.rows[0])        
+    } catch (error) {
+        res.status(409).json( { error: error.message } )
+        console.log('🚫 Unable to get trip - Error:', error.message)
+    }
+}
 
-    const results = await pool.query("SELECT * FROM trips WHERE id = $1", [id]);
-
-    res.status(200).json(results.rows[0]);
-    
-  } catch (error) {
-    res.status(409).json({ error: error.message });
-    console.log("Unable to get trip");
-    console.log("Error:", error.message);
-  }
-};
-
-// Step 7: Updating a Trip
 const updateTrip = async (req, res) => {
-  try {
-    const { title, description, img_url, num_days, start_date, end_date, total_cost } = req.body
+    try {
+        const { title, description, img_url, num_days, start_date, end_date, total_cost } = req.body
+        const id = parseInt(req.params.id)
+    
+        const results = await pool.query(`
+            UPDATE trips SET title = $1, description = $2, img_url = $3, num_days = $4, start_date = $5, end_date = $6, total_cost= $7 WHERE id = $8`,
+            [title, description, img_url, num_days, start_date, end_date, total_cost, id]
+        )
+
+        res.status(200).json(results.rows)
+        console.log('✨ trip updated')      
+    }
+    catch (error) {
+        res.status(409).json( { error: error.message } )
+        console.log('🚫 Unable to update trip - Error:', error.message)
+    }
+}
+
+const deleteTrip = async (req, res) => {
     const id = parseInt(req.params.id)
 
-    const results = await pool.query(
-      'UPDATE trips \
-      SET title = $1, description = $2, img_url = $3, num_days = $4, start_date = $5, end_date = $6, total_cost= $7 WHERE id = $8',
-      [title, description, img_url, num_days, start_date, end_date, total_cost, id]
-    )
+    try {
+        const activity_deletion = await pool.query('DELETE FROM activities WHERE trip_id = $1', [id])
+        const user_removal = await pool.query('DELETE FROM users_trips WHERE trip_id = $1', [id])
+        const destination_removal = await pool.query('DELETE FROM trips_destinations WHERE trip_id = $1', [id])
+        const results = await pool.query('DELETE FROM trips WHERE id = $1', [id])
 
-    res.status(200).json(results.rows);
-  }
-  catch(error){
-    res.status(409).json( { error: error.message } )
-  }
-};
+        console.log('❌ trip deleted')
 
-// Step 8 Delete a Trip
-const deleteTrip = async (req, res) => {
-  const id = parseInt(req.params.id)
-
-  try {
-    const activity_deletion = await pool.query(
-      'DELETE FROM activities \
-      WHERE trip_id = $1',
-      [id]
-    )
-
-    const results = await pool.query('DELETE FROM trips WHERE id = $1', [id])
-    res.status(200).json(results.rows)
-  }
-  catch(error) {
-    res.status(409).json( { error: error.message } )
-  }
-    
+        res.status(200).json(results.rows)
+    }
+    catch (error) {
+        res.status(409).json( { error: error.message } )
+    }
 }
+
 export default {
-  createTrip,
-  getTrips,
-  getTrip,
-  updateTrip,
-  deleteTrip,
-};
+    createTrip,
+    getTrips,
+    getTrip,
+    updateTrip,
+    deleteTrip
+}

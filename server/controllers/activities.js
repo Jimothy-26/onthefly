@@ -1,106 +1,88 @@
-import { pool } from "../config/database.js";
+import { pool } from '../config/database.js'
 
-// Step 12: Create a New Activity
 const createActivity = async (req, res) => {
-  try {
-    const trip_id = parseInt(req.params.trip_id);
-    const { activity } = req.body;
+    try {
+        const trip_id = parseInt(req.params.trip_id)
+        const { activity } = req.body
 
-    const results = await pool.query(
-      `INSERT INTO activities (trip_id, activity)
-       VALUES ($1, $2)
-       RETURNING *`,
-      [trip_id, activity]
-    );
+        const results = await pool.query(`
+            INSERT INTO activities ( activity, trip_id )
+            VALUES($1, $2)
+            RETURNING *`,
+            [activity, trip_id]
+        )
 
-    res.status(201).json(results.rows[0]);
-  }
-  catch (error) {
-    res.status(409).json({ error: error.message });
-  }
-};
+        res.status(201).json(results.rows[0])
+        console.log('🆕 new activity created')
+    }
+    catch (error) {
+        res.status(409).json( { error: error.message } )
+        console.log('Error:', error.message)
+    }
+}
 
-// Step 12: Retrieve All Activities
 const getActivities = async (req, res) => {
-  try {
-    const results = await pool.query(
-      "SELECT * FROM activities ORDER BY id ASC"
-    );
+    try {
+        const results = await pool.query('SELECT * FROM activities ORDER BY id ASC')
+        res.status(200).json(results.rows)
+        console.log(results.rows)
+    } catch (error) {
+        res.status(409).json( { error: error.message } )
+        console.log('🚫 Unable to GET all activities - Error:', error.message)
+    }
+}
 
-    res.status(200).json(results.rows);
-  }
-  catch (error) {
-    res.status(409).json({ error: error.message });
-  }
-};
-
-// Step 12: Retrieve All Activities for a Trip
 const getTripActivities = async (req, res) => {
-  try {
-    const trip_id = parseInt(req.params.trip_id);
+    try {
+        const trip_id = parseInt(req.params.trip_id)
+        const results = await pool.query('SELECT * FROM activities WHERE trip_id = $1', [trip_id])
+        res.status(200).json(results.rows)
+    } catch (error) {
+        res.status(409).json( { error: error.message } )
+        console.log('🚫 Unable to GET all trips - Error:', error.message)
+    }
+}
 
-    const results = await pool.query(
-      "SELECT * FROM activities WHERE trip_id = $1 ORDER BY id ASC",
-      [trip_id]
-    );
-
-    res.status(200).json(results.rows);
-  }
-  catch (error) {
-    res.status(409).json({ error: error.message });
-  }
-};
-
-// Step 12: Update the Number of Likes for an Activity
 const updateActivityLikes = async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const { num_likes } = req.body;
+    try {
+        const { num_votes } = req.body
+        const id = parseInt(req.params.id)
+    
+        const results = await pool.query(`
+            UPDATE activities
+            SET num_votes = $1
+            WHERE id = $2`,
+            [parseInt(num_votes), id]
+        )
 
-    const results = await pool.query(
-      `UPDATE activities
-       SET num_likes = $1
-       WHERE id = $2
-       RETURNING *`,
-      [num_likes, id]
-    );
-
-    if (results.rows.length === 0) {
-      return res.status(404).json({ error: "Activity not found" });
+        res.status(200).json(results.rows)
+        console.log('✨ Vote count updated!')
+    }
+    catch (error) {
+        res.status(409).json( { error: error.message } )
+        console.log('🚫 Unable to update vote count - Error:', error.message)
     }
 
-    res.status(200).json(results.rows[0]);
-  }
-  catch (error) {
-    res.status(409).json({ error: error.message });
-  }
-};
+}
 
-// Step 12: Delete an Activity
 const deleteActivity = async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id)
 
-    const results = await pool.query(
-      "DELETE FROM activities WHERE id = $1 RETURNING *",
-      [id]
-    );
-
-    if (results.rows.length === 0) {
-      return res.status(404).json({ error: "Activity not found" });
+    try {
+        const results = await pool.query('DELETE FROM activities WHERE id = $1', [id])
+        res.status(200).json(results.rows)
+        console.log('❌ activity deleted')
     }
-
-    res.status(200).json(results.rows[0]);
-  }
-  catch (error) {
-    res.status(409).json({ error: error.message });
-  }
-};
+    catch (error) {
+        res.status(409).json( { error: error.message } )
+        console.log('🚫 Unable to delete activity - Error:', error.message)
+    }
+}
 
 export default {
-  createActivity,
-  getActivities,
-  getTripActivities,
-  updateActivityLikes,
-  deleteActivity
-};
+    createActivity,
+    getActivities,
+    getTripActivities,
+    updateActivityLikes,
+    deleteActivity
+}
