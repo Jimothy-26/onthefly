@@ -1,64 +1,70 @@
-import express from 'express'
-import cors from 'cors'
+import express from "express";
+// Step 2: Setting up authentication middleware
+import passport from "passport";
+import session from "express-session";
+import { GitHub } from "./config/auth.js";
 
-import tripRoutes from './routes/trips.js'
-import activityRoutes from './routes/activities.js'
-import destinationRoutes from './routes/destinations.js'
-import tripDestinationRoutes from './routes/trips-destinations.js'
-import userTripRoutes from './routes/users-trips.js'
+import cors from "cors";
+import tripRoutes from "./routes/trips.js";
+import activityRoutes from "./routes/activities.js";
+import destinationRoutes from "./routes/destinations.js";
+import tripDestinationRoutes from "./routes/trips-destinations.js";
+// Step 3: Setting up reoute for authenticating 
+import authRoutes from "./routes/auth.js";
 
-import passport from 'passport'
-import session from 'express-session'
-import { GitHub } from './config/auth.js'
-import authRoutes from './routes/auth.js'
+const app = express();
 
-// create express app
-const app = express()
+// Session middleware
+app.use(express.json());
+app.use(
+  session({
+    secret: "codepath",
+    resave: "false",
+    saveUninitialized: true,
+  }),
+);
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: "GET,POST,PUT,DELETE,PATCH",
+    credentials: true,
+  }),
+);
 
-app.use(session({
-    secret: 'codepath',
-    resave: false,
-    saveUninitialized: true
- }))
+// Initialize Passport and remember the authenticated user
+app.use(passport.initialize());
+app.use(passport.session());
 
-// middleware
-app.use(express.json())
-app.use(cors({
-    origin: 'http://localhost:5173',
-    methods: 'GET,POST,PUT,DELETE,PATCH',
-    credentials: true
-  }
-))
-
-app.use(passport.initialize())
-app.use(passport.session())
-passport.use(GitHub)
+passport.use(GitHub);
 
 passport.serializeUser((user, done) => {
-    done(null, user)
-})
+  const { accesstoken, ...sessionUser } = user;
+  done(null, sessionUser);
+});
 
 passport.deserializeUser((user, done) => {
-    done(null, user)
-})
+  done(null, user);
+});
 
-app.get('/', (req, res) => {
-    res.status(200).send('<h1 style="text-align: center; margin-top: 50px;">✈️ OnTheFly API</h1>')
-})
 
-// authentication routes
-app.use('/auth', authRoutes)
+app.get("/", (req, res) => {
+  res
+    .status(200)
+    .send(
+      '<h1 style="text-align: center; margin-top: 50px;">✈️ OnTheFly API</h1>',
+    );
+});
 
-// routes
-app.use('/api/trips/', tripRoutes)
-app.use('/api/activities/', activityRoutes)
-app.use('/api/destinations/', destinationRoutes)
-app.use('/api/trips-destinations/', tripDestinationRoutes)
-app.use('/api/users-trips/', userTripRoutes)
+// Configure app to use auth route
+app.use("/auth", authRoutes);
 
-// connect server on port 3001
-const PORT = process.env.PORT || 3001
+app.use("/api/trips/", tripRoutes);
+app.use("/api/activities/", activityRoutes);
+app.use("/api/destinations/", destinationRoutes);
+app.use("/api/trips-destinations/", tripDestinationRoutes);
+
+const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`)
-})
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});

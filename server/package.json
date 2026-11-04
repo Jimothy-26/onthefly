@@ -11,12 +11,13 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.1.4",
-    "express": "^4.18.2",
-    "express-session": "^1.17.3",
+    "express": "^4.22.3",
+    "express-session": "^1.19.0",
     "nodemon": "^2.0.20",
-    "passport": "^0.6.0",
+    "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
-    "pg": "^8.9.0"
+    "pg": "^8.9.0",
+    "session": "^0.1.0"
   },
   "author": "",
   "license": "ISC"
