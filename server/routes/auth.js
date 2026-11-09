@@ -2,6 +2,7 @@ import express from 'express';
 import passport from 'passport';
 
 const router = express.Router();
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 router.get('/login/success', (req, res) => {
     if (req.user) {
@@ -18,7 +19,7 @@ router.get('/login/failed', (req, res) => {
 router.get('/logout', (req, res, next) => {
     req.logout((err) => {
         if (err) {
-            return next(error)
+            return next(err)
         }
 
         req.session.destroy((err) => {
@@ -39,8 +40,8 @@ router.get(
 router.get(
     '/github/callback',
     passport.authenticate('github', {
-        successRedirect: `https://client-d337.onrender.com`,
-        failureRedirect: `https://client-d337.onrender.com`,
+        successRedirect: CLIENT_URL,
+        failureRedirect: CLIENT_URL,
     })
 )
 

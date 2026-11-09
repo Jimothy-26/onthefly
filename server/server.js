@@ -22,11 +22,12 @@ passport.deserializeUser((user, done) => {
 
 const app = express()
 const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true'
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173'
 if (isProduction) {
     app.set('trust proxy', 1)
 }
 app.use(session({
-    secret: 'codepath',
+    secret: process.env.SESSION_SECRET || 'codepath-local-development',
     resave: false,
     saveUninitialized: true,
     cookie: isProduction ? { sameSite: 'none', secure: true } : {}
@@ -35,7 +36,7 @@ app.use(passport.initialize())
 app.use(passport.session())
 app.use(express.json())
 app.use(cors({
-    origin: 'https://client-d337.onrender.com',
+    origin: CLIENT_URL,
     methods: 'GET,POST,PUT,DELETE,PATCH',
     credentials: true
 }))

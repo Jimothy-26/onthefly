@@ -1,10 +1,12 @@
 import GitHubStrategy from 'passport-github2'
 import { pool } from './database.js'
 
+const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3001'
+
 const options = {
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: 'https://server-on0w.onrender.com/auth/github/callback'
+    callbackURL: `${SERVER_URL}/auth/github/callback`
 }
 
 const verify = async(accessToken, refreshToken, profile, callback) => {
