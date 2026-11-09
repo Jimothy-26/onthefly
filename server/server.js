@@ -12,13 +12,19 @@ import authRoutes from "./routes/auth.js";
 const app = express();
 
 app.use(express.json());
+app.set("trust proxy", 1);
 app.use(
   session({
     secret: "codepath",
-    resave: "false",
+    resave: false,
     saveUninitialized: true,
+    cookie: {
+      sameSite: "none",
+      secure: true,
+    },
   }),
 );
+
 app.use(
   cors({
     origin: "https://client-7zrj.onrender.com",
