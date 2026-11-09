@@ -1,130 +1,80 @@
-import { useState } from "react";
-import "../css/CreateTrip.css";
+import { useState } from 'react';
+import './CreateTrip.css'
 
-const CreateTrip = (props) => {
-  const [trip, setTrip] = useState({
-    id: 0,
-    title: "",
-    description: "",
-    img_url: "",
-    num_days: 0,
-    start_date: "",
-    end_date: "",
-    total_cost: 0.0,
-  });
+const CreateTrip = ({ api_url }) => {
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
+    const [trip, setTrip] = useState({id: 0, title: "", description: "", img_url: "", num_days: 0, start_date: "", end_date: "", total_cost: 0.0 })
+    const [error, setError] = useState('')
+    
+    const handleChange = (event) => {
+        const {name, value} = event.target;
+        setTrip( (prev) => {
+            return {
+                ...prev,
+                [name]:value,
+            }
+        })
+    }
+    
+    const createTrip = async (event) => {
+        event.preventDefault();
 
-    setTrip((prev) => {
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
-  };
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(trip)
+        }
 
-  const createTrip = (event) => {
-    event.preventDefault();
+        try {
+            const response = await fetch(`${api_url}/api/trips`, options);
+            if (!response.ok) throw new Error(`Unable to create trip (${response.status})`);
+            window.location.href = '/'
+        } catch (requestError) {
+            setError(requestError.message)
+        }
+    }
 
-    const options = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(trip),
-    };
 
-    fetch(`${API_URL}/api/trips`, options);
-    window.location.href = "/";
-  };
+    return (
+        <div>
+            <center><h3> Create New Trip</h3></center>
+            <form>
+                <label>Title</label> <br />
+                <input type="text" id="title" name="title" value={trip.title} onChange={handleChange}/><br />
+                <br/>
 
-  return (
-    <div>
-      <center>
-        <h3> Create New Trip</h3>
-      </center>
-      <form>
-        <label>Title</label> <br />
-        <input
-          type="text"
-          id="title"
-          name="title"
-          value={trip.title}
-          onChange={handleChange}
-        />
-        <br />
-        <br />
-        <label>Description</label>
-        <br />
-        <textarea
-          rows="5"
-          cols="50"
-          id="description"
-          name="description"
-          value={trip.description}
-          onChange={handleChange}
-        ></textarea>
-        <br />
-        <label>Image URL</label>
-        <br />
-        <input
-          type="text"
-          id="img_url"
-          name="img_url"
-          value={trip.img_url}
-          onChange={handleChange}
-        />
-        <br />
-        <br />
-        <label>Number of Days</label>
-        <br />
-        <input
-          type="number"
-          id="num_days"
-          name="num_days"
-          value={trip.num_days}
-          onChange={handleChange}
-        />
-        <br />
-        <br />
-        <label>Start Date</label>
-        <br />
-        <input
-          type="text"
-          id="start_date"
-          name="start_date"
-          value={trip.start_date}
-          onChange={handleChange}
-        />
-        <br />
-        <br />
-        <label>End Date</label>
-        <br />
-        <input
-          type="text"
-          id="end_date"
-          name="end_date"
-          value={trip.end_date}
-          onChange={handleChange}
-        />
-        <br />
-        <br />
-        <label>Total Cost</label>
-        <br />
-        <input
-          type="text"
-          id="total_cost"
-          name="total_cost"
-          value={trip.total_cost}
-          onChange={handleChange}
-        />
-        <br />
-        <br />
-        <input type="submit" value="Submit" onClick={createTrip} />
-      </form>
-    </div>
-  );
-};
+                <label>Description</label><br />
+                <textarea rows="5" cols="50" id="description" name="description" value={trip.description} onChange={handleChange}>
+                </textarea>
+                <br/>
 
-export default CreateTrip;
+                <label>Image URL </label><br />
+                <input type="text" id="img_url" name="img_url" value={trip.img_url} onChange={handleChange}/><br />
+                <br/>
+
+                <label>Number of Days</label><br />
+                <input type="number" id="num_days" name="num_days" value={trip.num_days} onChange={handleChange}/><br />
+                <br/>
+
+                <label>Start Date </label><br />
+                <input type="text" id="start_date" name="start_date" value={trip.start_date} onChange={handleChange}/><br />
+                <br/>
+
+                <label>End Date </label><br />
+                <input type="text" id="end_date" name="end_date" value={trip.end_date} onChange={handleChange}/><br />
+                <br/>
+
+                <label>Total Cost</label><br />
+                <input type="text" id="total_cost" name="total_cost" value={trip.total_cost} onChange={handleChange}/><br />
+                <br/>
+
+                <input type="submit" value="Submit" onClick={createTrip} />
+                {error && <p role="alert">{error}</p>}
+            </form>
+        </div>
+    )
+}
+
+export default CreateTrip

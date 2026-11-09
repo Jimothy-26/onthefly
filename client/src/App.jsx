@@ -1,161 +1,116 @@
-import { useState, useEffect } from "react";
-import { useRoutes, Link } from "react-router-dom";
-import ReadTrips from "./pages/ReadTrips";
-import CreateTrip from "./pages/CreateTrip";
-import EditTrip from "./pages/EditTrip";
-import CreateDestination from "./pages/CreateDestination";
-import ReadDestinations from "./pages/ReadDestinations";
-import TripDetails from "./pages/TripDetails";
-import CreateActivity from "./pages/CreateActivity";
-import AddToTrip from "./pages/AddToTrip";
-import Login from "./pages/Login";
-import Avatar from "./components/Avatar";
-import "./App.css";
+import './App.css';
+import { useState, useEffect } from 'react';
+import { Link, useRoutes } from 'react-router'
+import ReadTrips from './pages/ReadTrips'
+import CreateTrip from './pages/CreateTrip'
+import EditTrip from './pages/EditTrip'
+import CreateDestination from './pages/CreateDestination';
+import ReadDestinations from './pages/ReadDestinations'
+import TripDetails from './pages/TripDetails'
+import CreateActivity from './pages/CreateActivity';
+import AddToTrip from './pages/AddToTrip';
+import Login from './pages/Login';
+import Avatar from './components/Avatar';
 
-// Create constant and pass it as props to the components that call on API
+const API_URL = import.meta.env.PROD ? 'https://server-on0w.onrender.com' : ''
+
 const App = () => {
-  const API_URL = "http://localhost:3001";
+  
   const [trips, setTrips] = useState([]);
   const [destinations, setDestinations] = useState([]);
+  const [user, setUser] = useState(null);
 
-  // Create state variable called user
-  const [user, setUser] = useState();
+  const fetchDestinations = async () => {
+    const response = await fetch(`${API_URL}/api/destinations`);
+    if (!response.ok) throw new Error(`Unable to load destinations (${response.status})`);
+    const data = await response.json();
+    setDestinations(data);
+  }
 
   useEffect(() => {
-    const fetchTrips = async () => {
+    const getUser = async () => {
+      const response = await fetch(`${API_URL}/auth/login/success`, { credentials: 'include' })
+      const json = await response.json()
+      setUser(json.user)
+    }
+
+    const fetchTrips = async() => {
       const response = await fetch(`${API_URL}/api/trips`);
       const data = await response.json();
       setTrips(data);
-    };
-
-    const fetchDestinations = async () => {
-      const response = await fetch(`${API_URL}/api/destinations`);
-      const data = await response.json();
-      setDestinations(data);
-    };
-
-    // Fetch user data and parse the results 
-    const getUser = async () => {
-      const response = await fetch(`${API_URL}/auth/login/success`, {
-        credentials: "include",
-      });
-      const json = await response.json();
-      setUser(json.user);
-    };
+    }
 
     getUser();
-    fetchTrips();
-    fetchDestinations();
+    fetchTrips().catch(console.error);
+    fetchDestinations().catch(console.error);
   }, []);
 
   const logout = async () => {
-    const url = `${API_URL}/auth/logout`;
-    const response = await fetch(url, { credentials: "include" });
-    const json = await response.json();
-    window.location.href = "/";
-  };
+    const url = `${API_URL}/auth/logout`
+    await fetch(url, { credentials: 'include' })
+    window.location.href = '/'
+  }
 
-  //Updated all reouts to render the login components; Passes API_URL as props to login component
+  const login = <Login api_url={API_URL} />
+  const isAuthenticated = user && user.id
+
+  // Sets up routes
   let element = useRoutes([
     {
       path: "/",
-      element:
-        user && user.id ? (
-          <ReadTrips user={user} data={trips} />
-        ) : (
-          <Login api_url={API_URL} />
-        ),
+      element: isAuthenticated ? <ReadTrips user={user} data={trips} /> : login
     },
     {
-      path: "/trip/new",
-      element:
-        user && user.id ? (
-          <CreateTrip user={user} api_url={API_URL} />
-        ) : (
-          <Login api_url={API_URL} />
-        ),
+      path:"/trip/new",
+      element: isAuthenticated ? <CreateTrip user={user} api_url={API_URL} /> : login
     },
     {
-      path: "/edit/:id",
-      element:
-        user && user.id ? (
-          <EditTrip user={user} data={trips} api_url={API_URL} />
-        ) : (
-          <Login api_url={API_URL} />
-        ),
+      path:"/edit/:id",
+      element: isAuthenticated ? <EditTrip user={user} data={trips} api_url={API_URL} /> : login
     },
     {
-      path: "/destinations",
-      element:
-        user && user.id ? (
-          <ReadDestinations user={user} data={destinations} />
-        ) : (
-          <Login api_url={API_URL} />
-        ),
+      path:"/destinations",
+      element: isAuthenticated ? <ReadDestinations user={user} data={destinations} /> : login
     },
     {
-      path: "/trip/get/:id",
-      element:
-        user && user.id ? (
-          <TripDetails user={user} data={trips} api_url={API_URL} />
-        ) : (
-          <Login api_url={API_URL} />
-        ),
+      path:"/trip/get/:id",
+      element: isAuthenticated ? <TripDetails user={user} data={trips} api_url={API_URL} /> : login
     },
     {
-      path: "/destination/new/:trip_id",
-      element:
-        user && user.id ? (
-          <CreateDestination user={user} api_url={API_URL} />
-        ) : (
-          <Login api_url={API_URL} />
-        ),
+      path:"/destination/new",
+      element: isAuthenticated ? <CreateDestination user={user} api_url={API_URL} refreshDestinations={fetchDestinations} /> : login
     },
     {
-      path: "/activity/create/:trip_id",
-      element:
-        user && user.id ? (
-          <CreateActivity user={user} api_url={API_URL} />
-        ) : (
-          <Login api_url={API_URL} />
-        ),
+      path:"/activity/create/:trip_id",
+      element: isAuthenticated ? <CreateActivity user={user} api_url={API_URL} /> : login
     },
     {
-      path: "/destinations/add/:destination_id",
-      element:
-        user && user.id ? (
-          <AddToTrip user={user} data={trips} api_url={API_URL} />
-        ) : (
-          <Login api_url={API_URL} />
-        ),
-    },
+      path:"/destinations/add/:destination_id",
+      element: isAuthenticated ? <AddToTrip user={user} data={trips} api_url={API_URL} /> : login
+    }
   ]);
 
-  return (
+  
+  return ( 
+
     <div className="App">
-      {user && user.id ? (
-        <div className="header">
-          <h1>On The Fly ✈️</h1>
-          <Link to="/">
-            <button className="headerBtn">Explore Trips</button>
-          </Link>
-          <Link to="/destinations">
-            <button className="headerBtn">Explore Destinations</button>
-          </Link>
-          <Link to="/trip/new">
-            <button className="headerBtn"> + Add Trip </button>
-          </Link>
-          <button onClick={logout} className="headerBtn">
-            Logout
-          </button>
-          <Avatar className="avatar" user={user} />
-        </div>
-      ) : (
-        <></>
-      )}
+      {
+        isAuthenticated ?
+          <div className="header">
+            <h1>On The Fly ✈️</h1>
+            <Link to="/"><button className="headerBtn">Explore Trips</button></Link>
+            <Link to="/destinations"><button className="headerBtn">Explore Destinations</button></Link>
+            <Link to="/trip/new"><button className="headerBtn"> + Add Trip </button></Link>
+            <Link to="/destination/new"><button className="headerBtn"> + Add Destination </button></Link>
+            <button onClick={logout} className="headerBtn">Logout</button>
+            <Avatar className="avatar" user={user} />
+          </div>
+        : <></>
+      }
       {element}
     </div>
+
   );
-};
+}
 
 export default App;

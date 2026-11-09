@@ -1,66 +1,64 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
-import "../css/CreateActivity.css";
+import { useState } from 'react';
+import { useParams } from 'react-router';
+import './CreateActivity.css'
 
-const CreateActivity = (props) => {
-  const [activity, setActivity] = useState({ activity: "" });
-  const { trip_id } = useParams();
+const CreateActivity = ({ api_url }) => {
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
+    const [activity, setActivity] = useState({activity: "" })
+    const [error, setError] = useState('')
+    const {trip_id} = useParams();
 
-    setActivity((prev) => {
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
-  };
 
-  const createActivity = async (event) => {
-    event.preventDefault();
+    const handleChange = (event) => {
+        const {name, value} = event.target;
+        setActivity( (prev) => {
+            return {
+                ...prev,
+                [name]:value,
+            }
+        })
+    }
+    
+    const createActivity = async (event) => {
+        event.preventDefault();
 
-    const options = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(activity),
-    };
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(activity)
+        }
 
-    fetch(`${API_URL}/api/activities/${trip_id}`, options);
-    window.location.href = "/";
-  };
+        try {
+            const response = await fetch(`${api_url}/api/activities/${trip_id}`, options);
+            if (!response.ok) {
+                throw new Error(`Unable to create activity (${response.status})`);
+            }
 
-  return (
-    <form>
-      <center>
-        <h3>Add Activity</h3>
-      </center>
-      <label>Activity</label> <br />
-      <input
-        type="text"
-        id="activity"
-        name="activity"
-        value={activity.activity}
-        onChange={handleChange}
-      />
-      <br />
-      <br />
-      <label>Trip ID</label>
-      <br />
-      <input
-        type="number"
-        id="trip_id"
-        name="trip_id"
-        value={trip_id}
-        readOnly
-      />
-      <br />
-      <br />
-      <input type="submit" value="Submit" onClick={createActivity} />
-    </form>
-  );
-};
+            window.location.href = '/';
+        } catch (requestError) {
+            setError(requestError.message);
+        }
+    }
 
-export default CreateActivity;
+    return (
+        <div>
+            <center><h3>Add Activity</h3></center>
+            <form>
+                <label>Activity</label> <br />
+                <input type="text" id="activity" name="activity" value={activity.activity} onChange={handleChange}/><br />
+                <br/>
+
+                <label>Trip ID</label><br />
+                <input type="number" id="trip_id" name="trip_id" value={trip_id} readOnly/><br />
+                <br/>
+
+                <input type="submit" value="Submit" onClick={createActivity} />
+                {error && <p role="alert">{error}</p>}
+            </form>
+        </div>
+    )
+}
+
+export default CreateActivity

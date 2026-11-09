@@ -1,109 +1,116 @@
-import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
-import ActivityBtn from "../components/ActivityBtn";
-import DestinationBtn from "../components/DestinationBtn";
-import "../css/TripDetails.css";
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router';
+import ActivityBtn from '../components/ActivityBtn';
+import DestinationBtn from '../components/DestinationBtn';
+import './TripDetails.css';
 
-const TripDetails = (props) => {
-  const { id } = useParams();
-  const [activities, setActivities] = useState([]);
-  const [destinations, setDestinations] = useState([]);
-  const [trip, setTrip] = useState({
-    id: 0,
-    title: "",
-    description: "",
-    img_url: "",
-    num_days: 0,
-    start_date: "",
-    end_date: "",
-    total_cost: 0.0,
-  });
+const TripDetails = ({ data = [], api_url }) => {
+    const { id } = useParams();
+    const [activities, setActivities] = useState([]);
+    const [destinations, setDestinations] = useState([]);
+    const [trip, setTrip] = useState(null);
+    const [error, setError] = useState('');
 
-  useEffect(() => {
-    const result = data.filter((item) => item.id === parseInt(id))[0];
+    useEffect(() => {
+        const result = data.find((item) => item.id === Number(id));
+        setTrip(result ?? null);
+    }, [data, id]);
 
-    if (result) {
-      setTrip({
-        id: parseInt(result.id),
-        title: result.title,
-        description: result.description,
-        img_url: result.img_url,
-        num_days: parseInt(result.num_days),
-        start_date: result.start_date.slice(0, 10),
-        end_date: result.end_date.slice(0, 10),
-        total_cost: result.total_cost,
-      });
+    useEffect(() => {
+        let isCurrent = true;
+
+        const fetchActivities = async () => {
+            const response = await fetch(`${api_url}/api/activities/${id}`);
+            if (!response.ok) {
+                throw new Error(`Unable to load activities (${response.status})`);
+            }
+            const data = await response.json();
+            if (isCurrent) setActivities(data);
+        };
+
+        const fetchDestinations = async () => {
+            const response = await fetch(`${api_url}/api/trip-destinations/destinations/${id}`);
+            if (!response.ok) {
+                throw new Error(`Unable to load destinations (${response.status})`);
+            }
+            const data = await response.json();
+            if (isCurrent) setDestinations(data);
+        };
+
+        setError('');
+        Promise.all([fetchActivities(), fetchDestinations()]).catch((fetchError) => {
+            if (isCurrent) setError(fetchError.message);
+        });
+
+        return () => {
+            isCurrent = false;
+        };
+    }, [id, api_url]);
+
+    if (!trip) {
+        return (
+            <div className="out">
+                {data.length === 0 ? <h3>Loading trip...</h3> : <h3>Trip not found.</h3>}
+            </div>
+        );
     }
-  }, [data, id]);
 
-  useEffect(() => {
-    const fetchActivities = async () => {
-      const response = await fetch("/api/activities/" + id);
-      const data = await response.json();
-      setActivities(data);
-    };
+    return (
+        <div className="out">
+            <div className="flex-container">
+                <div className="left-side">
+                    <h3>{trip.title}</h3>
+                    <p>{`🗓️ Duration: ${trip.num_days} days`}</p>
+                    <p>{`🛫 Depart: ${trip.start_date?.slice(0, 10)}`}</p>
+                    <p>{`🛬 Return: ${trip.end_date?.slice(0, 10)}`}</p>
+                    <p>{trip.description}</p>
+                    <p>{`Total cost: ${trip.total_cost}`}</p>
+                </div>
 
-    const fetchDestinations = async () => {
-      const response = await fetch(
-        "/api/trips-destinations/destinations/" + id,
-      );
-      const data = await response.json();
-      setDestinations(data);
-    };
-
-    fetchActivities();
-    fetchDestinations();
-  }, [data, id]);
-
-  return (
-    <div className="out">
-      <div className="flex-container">
-        <div className="left-side">
-          <h3>{trip.title}</h3>
-          <p>{"🗓️ Duration: " + trip.num_days + " days"}</p>
-          <p>{"🛫 Depart: " + trip.start_date}</p>
-          <p>{"🛬 Return: " + trip.end_date}</p>
-          <p>{trip.description}</p>
-        </div>
-
-        <div
-          className="right-side"
-          style={{ backgroundImage: `url(${trip.img_url})` }}
-        ></div>
-      </div>
-
-      <div className="flex-container">
-        <div className="activities">
-          {activities && activities.length > 0
-            ? activities.map((activity, index) => (
-                <ActivityBtn
-                  key={activity.id}
-                  id={activity.id}
-                  activity={activity.activity}
-                  num_votes={activity.num_votes}
+                <div
+                    className="right-side"
+                    style={{ backgroundImage: `url(${trip.img_url})` }}
+                    role="img"
+                    aria-label={trip.title}
                 />
-              ))
-            : ""}
-          <br />
-          <Link to={"../../activity/create/" + id}>
-            <button className="addActivityBtn">+ Add Activity</button>
-          </Link>
-        </div>
+            </div>
 
-        <div className="destinations">
-          {destinations && destinations.length > 0
-            ? destinations.map((destination, index) => (
-                <DestinationBtn
-                  key={destination.id}
-                  id={destination.id}
-                  destination={destination.destination}
-                />
-              ))
-            : ""}
+            <div className="flex-container">
+                <div className="activities">
+                    <h3>Activities</h3>
+                    {activities.length > 0 ? (
+                        activities.map((activity) => (
+                            <ActivityBtn
+                                key={activity.id}
+                                id={activity.id}
+                                activity={activity.activity}
+                                num_votes={activity.num_votes}
+                                api_url={api_url}
+                            />
+                        ))
+                    ) : <p>No activities added yet.</p>}
+                    <Link to={`/activity/create/${id}`}>
+                        <button className="addActivityBtn">+ Add Activity</button>
+                    </Link>
+                </div>
+
+                <div className="destinations">
+                    <h3>Destinations</h3>
+                    {destinations.length > 0 ? (
+                        destinations.map((destination) => (
+                            <DestinationBtn
+                                key={destination.id}
+                                id={destination.id}
+                                destination={destination.destination}
+                            />
+                        ))
+                    ) : <p>No destinations added yet.</p>}
+                </div>
+            </div>
+
+            {error && <p role="alert">{error}</p>}
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default TripDetails;
