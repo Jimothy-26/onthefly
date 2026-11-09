@@ -5,6 +5,7 @@ import DestinationBtn from "../components/DestinationBtn";
 import "../css/TripDetails.css";
 
 const TripDetails = (props) => {
+  const data = props.data || [];
   const { id } = useParams();
   const [activities, setActivities] = useState([]);
   const [destinations, setDestinations] = useState([]);
