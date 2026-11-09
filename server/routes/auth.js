@@ -1,7 +1,7 @@
 import express from "express";
 import passport from "passport";
 
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+const CLIENT_URL = process.env.CLIENT_URL || "https://client-7zrj.onrender.com";
 const router = express.Router();
 
 router.get("/login/success", (req, res) => {

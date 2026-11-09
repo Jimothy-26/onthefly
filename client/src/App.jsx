@@ -13,7 +13,7 @@ import Avatar from "./components/Avatar";
 import "./App.css";
 
 const App = () => {
-  const API_URL = "http://localhost:3001";
+  const API_URL = import.meta.env.PROD ? 'https://server-tp7o.onrender.com' : '/api'
   const [trips, setTrips] = useState([]);
   const [destinations, setDestinations] = useState([]);
   const [user, setUser] = useState();
