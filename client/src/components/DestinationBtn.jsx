@@ -1,12 +1,9 @@
-import './DestinationBtn.css'
-
+import '../css/DestinationBtn.css'
 
 const DestinationBtn = (props) =>  {
-
   return (
-    <button className="DestinationBtn" id={props.id}>{props.destination}</button>
-  );
+    <button className='DestinationBtn' id={props.id}>{props.destination}</button>
+  )
+}
 
-};
-
-export default DestinationBtn;
+export default DestinationBtn

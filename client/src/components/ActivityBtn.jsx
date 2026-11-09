@@ -1,12 +1,11 @@
-import {useState} from 'react';
-import './ActivityBtn.css'
+import { useState } from 'react'
+import '../css/ActivityBtn.css'
 
 const ActivityBtn = (props) =>  {
 
   const [num_votes, setNumVotes] = useState(props.num_votes)
-  const [error, setError] = useState('')
 
-  const updateCount = async () => {
+  const updateCount = () => {
     const options = {
       method: 'PATCH',
       headers: {
@@ -14,26 +13,17 @@ const ActivityBtn = (props) =>  {
       },
       body: JSON.stringify({num_votes: num_votes + 1})
     }
-
-    try {
-      const response = await fetch(`${props.api_url}/api/activities/${props.id}`, options)
-      if (!response.ok) throw new Error(`Unable to vote (${response.status})`)
-      setNumVotes((num_votes) => num_votes + 1)
-      setError('')
-    } catch (requestError) {
-      setError(requestError.message)
-    }
+  
+    fetch('/api/activities/' + props.id, options)
+    setNumVotes((num_votes) => num_votes + 1)
   }
 
   return (
-    <>
-      <button className='activityBtn' id={props.id} onClick={updateCount}>
-        {props.activity} <br/> {'△ ' + num_votes + ' Upvotes' }
-      </button>
-      {error && <p role="alert">{error}</p>}
-    </>
+    <button className='activityBtn' id={props.id} onClick={updateCount}>
+      {props.activity} <br/> {'△ ' + num_votes + ' Upvotes' }
+    </button>
   )
 
 }
 
-export default ActivityBtn;
+export default ActivityBtn
